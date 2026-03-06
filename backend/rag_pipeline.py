@@ -11,6 +11,11 @@ from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 
 
+# Global state for indexing
+indexing_in_progress = False
+_vector_store_cache = None
+
+
 # Load environment variables
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -57,12 +62,21 @@ def get_storage_dir():
 # ----------------------------------
 
 def build_vector_store():
-    pdf_path = get_report_path()
+    storage_dir = get_storage_dir()
+    index_path = os.path.join(storage_dir, "swiggy_faiss")
 
+    # 1. Check if index already exists (e.g. from GitHub)
+    if os.path.exists(os.path.join(index_path, "index.faiss")):
+        print("Existing FAISS index found in storage. Skipping PDF parsing.")
+        return load_vector_store()
+
+    # 2. Otherwise, find the PDF
+    pdf_path = get_report_path()
     if not pdf_path or not os.path.exists(pdf_path):
         print(f"WARNING: No valid PDF file found for RAG pipeline.")
         return None
 
+    print(f"Index not found. Starting one-time parsing of: {pdf_path}")
     loader = PyPDFLoader(pdf_path)
     try:
         documents = loader.load()
@@ -85,41 +99,52 @@ def build_vector_store():
         model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
 
-    vector_store = FAISS.from_documents(chunks, embeddings)
+    global indexing_in_progress, _vector_store_cache
+    indexing_in_progress = True
 
-    storage_dir = get_storage_dir()
-
-    vector_store.save_local(
-        os.path.join(storage_dir, "swiggy_faiss")
-    )
-
-    return vector_store
+    try:
+        vector_store = FAISS.from_documents(chunks, embeddings)
+        vector_store.save_local(index_path)
+        _vector_store_cache = vector_store
+        print("Success: Knowledge base built and saved locally.")
+        return vector_store
+    finally:
+        indexing_in_progress = False
 
 
 # ----------------------------------
 # LOAD VECTOR STORE
 # ----------------------------------
 
-@lru_cache(maxsize=1)
 def load_vector_store():
+    global _vector_store_cache
+    if _vector_store_cache:
+        return _vector_store_cache
 
     storage_dir = get_storage_dir()
     index_path = os.path.join(storage_dir, "swiggy_faiss")
+
+    if not os.path.exists(index_path):
+        # Case 1: Not indexed at all yet
+        if indexing_in_progress:
+            return None # Don't start another build if one is running
+        return None # Let the background task handle it, or error gracefully
 
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
 
     try:
-        return FAISS.load_local(
+        _vector_store_cache = FAISS.load_local(
             index_path,
             embeddings,
             allow_dangerous_deserialization=True
         )
+        return _vector_store_cache
     except Exception as e:
         print(f"Error loading FAISS local index: {str(e)}")
-        # Fallback to build (which now returns None on failure instead of raising)
-        return build_vector_store()
+        # Don't trigger a synchronous build here inside a request!
+        return None
 
 
 # ----------------------------------
@@ -191,6 +216,8 @@ def answer_query(question: str) -> Tuple[str, List[dict]]:
     vector_store = load_vector_store()
 
     if not vector_store:
+        if indexing_in_progress:
+            return "The Swiggy Annual Report knowledge base is currently being prepared. Please try again in 30-60 seconds.", []
         return "The Swiggy Annual Report PDF is currently missing or invalid. Please ensure a valid PDF is available.", []
 
     docs = vector_store.similarity_search(question, k=5)
