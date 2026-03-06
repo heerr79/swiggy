@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Swiggy Annual Report Q&A</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="gradient-bg"></div>
+      <header class="app-header">
+        <div class="logo-badge">
+          <span class="logo-letter">S</span>
+        </div>
+        <div class="title-group">
+          <h1>Swiggy Annual Report Assistant</h1>
+          <p>Ask anything about the FY 2023–24 Swiggy Annual Report.</p>
+        </div>
+      </header>
+
+      <main class="chat-card">
+        <section id="chat-window" class="chat-window">
+          <div class="message message-assistant">
+            <div class="avatar avatar-assistant">AI</div>
+            <div class="bubble bubble-assistant">
+              <p>
+                Hello! I’m grounded strictly in the Swiggy Annual Report
+                FY&nbsp;2023–24. Ask a question like:
+              </p>
+              <ul>
+                <li>“What were Swiggy’s key growth drivers this year?”</li>
+                <li>“Summarize the financial performance in one paragraph.”</li>
+                <li>“How is Instamart performing compared to last year?”</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="input-section">
+          <form id="query-form" class="input-form">
+            <div class="input-wrapper">
+              <textarea
+                id="question-input"
+                rows="1"
+                placeholder="Type your question about the Swiggy Annual Report…"
+                autocomplete="off"
+                required
+              ></textarea>
+              <button type="submit" id="send-btn">
+                <span class="send-label">Ask</span>
+                <span class="send-icon">➤</span>
+              </button>
+            </div>
+            <p class="hint">
+              Answers are generated only from the Swiggy Annual Report FY
+              2023–24. If the report doesn’t mention something, the assistant
+              should say it doesn’t know.
+            </p>
+          </form>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        <span>Built as an ML intern assignment • Swiggy RAG Q&A</span>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
+
