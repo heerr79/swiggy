@@ -29,7 +29,7 @@ def get_report_path() -> str:
         return env_path
 
     # fallback default
-    return r"c:\Users\Arjun\AppData\Roaming\Cursor\User\workspaceStorage\54687ddf8445e44e3e634479567ba45d\pdfs\884561ce-b462-4f2a-b081-f767686e5af9\Annual-Report-FY-2023-24 (3)_compressed (1).pdf"
+    return os.path.join(BASE_DIR, "data", "report.pdf")
 
 
 # ----------------------------------

@@ -1,6 +1,9 @@
 import uvicorn
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from .rag_pipeline import answer_query, build_vector_store
@@ -20,9 +23,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+
 @app.get("/")
 def home():
-    return {"message": "Swiggy RAG API is running"}
+    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
     
 @app.on_event("startup")
@@ -47,6 +53,8 @@ async def query_report(payload: QueryRequest):
         "contexts": contexts,
     }
 
+
+app.mount("/", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 if __name__ == "__main__":
     uvicorn.run("backend.app:app", host="0.0.0.0", port=8000, reload=True)

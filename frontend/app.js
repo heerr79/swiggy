@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000/query";
+const API_URL = "/query";
 
 const chatWindow = document.getElementById("chat-window");
 const form = document.getElementById("query-form");
@@ -81,7 +81,7 @@ form.addEventListener("submit", async (event) => {
     console.error(error);
     appendMessage(
       "assistant",
-      "Something went wrong while contacting the RAG backend. Please ensure the API is running on http://localhost:8000 and try again."
+      "Something went wrong while contacting the RAG backend. Please ensure the API is running and try again."
     );
   } finally {
     setLoading(false);
