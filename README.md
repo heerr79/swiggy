@@ -13,8 +13,10 @@ The app consists of:
 
 - **Document**: Swiggy Annual Report FY 2023–24  
 - **Format**: PDF  
-- **Local file used in this project**: the user‑provided PDF at
-  `c:\Users\Arjun\AppData\Roaming\Cursor\User\workspaceStorage\54687ddf8445e44e3e634479567ba45d\pdfs\884561ce-b462-4f2a-b081-f767686e5af9\Annual-Report-FY-2023-24 (3)_compressed (1).pdf`
+- **Local file used in this project**: the user‑provided PDF at 
+      Annual-Report-FY-2023-24 (1) (1).pdf
+  
+ 
 
 > **Note**: When you submit this assignment, add the official public URL of the Swiggy FY 2023–24 Annual Report here (from Swiggy’s investor relations / financials page).
 
