@@ -37,7 +37,10 @@ async def ensure_index():
     Ensure that the FAISS index is built when the server starts.
     If it already exists, the loader in rag_pipeline will just use it.
     """
-    build_vector_store()
+    try:
+        build_vector_store()
+    except Exception as e:
+        print(f"ERROR during startup build_vector_store: {str(e)}")
 
 
 @app.get("/health")
