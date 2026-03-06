@@ -23,13 +23,23 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 # ----------------------------------
 
 def get_report_path() -> str:
+    # 1. Check environment variable
     env_path = os.getenv("SWIGGY_REPORT_PATH")
-
-    if env_path and os.path.exists(env_path):
+    if env_path and os.path.exists(env_path) and os.path.getsize(env_path) > 0:
         return env_path
 
-    # fallback default
-    return os.path.join(BASE_DIR, "data", "report.pdf")
+    # 2. Check default data path
+    default_path = os.path.join(BASE_DIR, "data", "report.pdf")
+    if os.path.exists(default_path) and os.path.getsize(default_path) > 0:
+        return default_path
+
+    # 3. Fallback to root PDF (often uploaded as such)
+    root_pdf = os.path.join(BASE_DIR, "Annual-Report-FY-2023-24 (1) (1).pdf")
+    if os.path.exists(root_pdf) and os.path.getsize(root_pdf) > 0:
+        return root_pdf
+
+    # No valid PDF found
+    return ""
 
 
 # ----------------------------------
@@ -47,14 +57,22 @@ def get_storage_dir():
 # ----------------------------------
 
 def build_vector_store():
-
     pdf_path = get_report_path()
 
-    if not os.path.exists(pdf_path):
-        raise FileNotFoundError(f"PDF not found at {pdf_path}")
+    if not pdf_path or not os.path.exists(pdf_path):
+        print(f"WARNING: No valid PDF file found for RAG pipeline.")
+        return None
 
     loader = PyPDFLoader(pdf_path)
-    documents = loader.load()
+    try:
+        documents = loader.load()
+    except Exception as e:
+        print(f"ERROR loading PDF {pdf_path}: {str(e)}")
+        return None
+
+    if not documents:
+        print(f"WARNING: No documents loaded from {pdf_path}.")
+        return None
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
@@ -98,7 +116,9 @@ def load_vector_store():
             embeddings,
             allow_dangerous_deserialization=True
         )
-    except:
+    except Exception as e:
+        print(f"Error loading FAISS local index: {str(e)}")
+        # Fallback to build (which now returns None on failure instead of raising)
         return build_vector_store()
 
 
@@ -169,6 +189,9 @@ def call_gemini(prompt: str):
 def answer_query(question: str) -> Tuple[str, List[dict]]:
 
     vector_store = load_vector_store()
+
+    if not vector_store:
+        return "The Swiggy Annual Report PDF is currently missing or invalid. Please ensure a valid PDF is available.", []
 
     docs = vector_store.similarity_search(question, k=5)
 
