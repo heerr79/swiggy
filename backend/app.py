@@ -31,16 +31,24 @@ def home():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
     
+import asyncio
+
 @app.on_event("startup")
 async def ensure_index():
     """
     Ensure that the FAISS index is built when the server starts.
     If it already exists, the loader in rag_pipeline will just use it.
+    We run this in the background so the server can start listening 
+    on the port immediately, avoiding Render's timeout.
     """
-    try:
-        build_vector_store()
-    except Exception as e:
-        print(f"ERROR during startup build_vector_store: {str(e)}")
+    def run_build():
+        try:
+            build_vector_store()
+        except Exception as e:
+            print(f"ERROR during background build_vector_store: {str(e)}")
+
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(None, run_build)
 
 
 @app.get("/health")
